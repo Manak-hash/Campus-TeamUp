@@ -11,6 +11,8 @@ A platform for university students to publish project ideas, specify required sk
 ## Team
 
 - [@Manak-hash](https://github.com/Manak-hash)
+- [@o-alharrar](https://github.com/o-alharrar)
+- [@aymensada](https://github.com/aymensada)
 
 ## Getting Started
 
