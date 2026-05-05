@@ -2,6 +2,8 @@
 
 A platform for university students to publish project ideas, specify required skills, and form teams through structured join requests.
 
+The [Project Specifications Document](docs/specifications.md) for our teacher.
+
 ## Tech Stack
 
 - **Frontend:** React + TypeScript + Tailwind CSS
