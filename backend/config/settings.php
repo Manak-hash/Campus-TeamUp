@@ -7,8 +7,9 @@ return function (App $app) {
     $app->addRoutingMiddleware();
 
     // Error handling (should be added last)
+    $displayErrorDetails = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
     $errorMiddleware = $app->addErrorMiddleware(
-        $_ENV['APP_DEBUG'] === 'true',
+        $displayErrorDetails,
         true,
         true
     );
