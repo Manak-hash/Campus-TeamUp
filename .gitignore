@@ -1,8 +1,12 @@
 # Dependencies
+node_modules/
 backend/vendor/
 frontend/node_modules/
 
 # Environment files
+.env
+.env.local
+.env.*.local
 backend/.env
 frontend/.env
 
@@ -20,9 +24,19 @@ backend/database/*.db
 Thumbs.db
 
 # Build outputs
+dist/
 frontend/dist/
 frontend/build/
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI / Agent Metadata
+GEMINI.md
+**/GEMINI.md
+MEMORY.md
+.gemini/
+.vibeyardignore
