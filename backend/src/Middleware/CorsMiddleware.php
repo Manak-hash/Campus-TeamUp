@@ -5,6 +5,7 @@ namespace CampusTeamUp\Middleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\Psr7\Response as SlimResponse;
 
 class CorsMiddleware
 {
@@ -12,32 +13,25 @@ class CorsMiddleware
     {
         // Handle OPTIONS preflight requests early
         if ($request->getMethod() === 'OPTIONS') {
-            $response = $handler->getResponse();
+            $response = new SlimResponse();
             return $response
                 ->withStatus(204)
-                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                ->withHeader('Access-Control-Max-Age', '86400');
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, User-Id')
+                ->withHeader('Access-Control-Max-Age', '86400')
+                ->withHeader('Access-Control-Allow-Origin', $request->getHeaderLine('Origin') ?: '*');
         }
-
-        // Get allowed origins from env separated by comma
-        $allowedOrigins = explode(',', $_ENV['CORS_ALLOWED_ORIGINS'] ?? '');
-        $allowedOrigins = array_map('trim', $allowedOrigins);
-
-        // Get the request origin
-        $requestOrigin = $request->getHeaderLine('Origin');
 
         // Process the request
         $response = $handler->handle($request);
 
-        // Check if the request origin is in our allowed list
-        if (in_array($requestOrigin, $allowedOrigins)) {
-            $response = $response->withHeader('Access-Control-Allow-Origin', $requestOrigin);
-        }
+        // Simple wildcard for now, or match Origin
+        $requestOrigin = $request->getHeaderLine('Origin') ?: '*';
 
         return $response
+            ->withHeader('Access-Control-Allow-Origin', $requestOrigin)
             ->withHeader('Access-Control-Allow-Credentials', 'true')
-            ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, User-Id')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     }
 }
