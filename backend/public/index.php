@@ -1,6 +1,11 @@
 <?php
 
+<<<<<<< Updated upstream
 use DI\ContainerBuilder;
+=======
+session_start();
+
+>>>>>>> Stashed changes
 use Slim\Factory\AppFactory;
 use CampusTeamUp\Middleware\CorsMiddleware;
 use Dotenv\Dotenv;
