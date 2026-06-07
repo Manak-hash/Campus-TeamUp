@@ -56,7 +56,7 @@ class ProjectController
         $stmt->execute($queryParams);
         $total = (int)$stmt->fetchColumn();
 
-        $sql = "SELECT p.*, u.name as owner_name,
+        $sql = "SELECT p.*, u.name as owner_name, u.avatar_url as owner_avatar,
                 (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
                 FROM projects p
                 LEFT JOIN users u ON p.owner_id = u.id
@@ -77,6 +77,7 @@ class ProjectController
             ");
             $skillStmt->execute([$project['id']]);
             $project['skills'] = $skillStmt->fetchAll();
+            $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
         }
 
         $response->getBody()->write(json_encode([
@@ -100,6 +101,8 @@ class ProjectController
             $response->getBody()->write(json_encode(['error' => 'Project not found']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
+
+        $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
 
         $skillStmt = $this->db->prepare("
             SELECT s.id, s.name, ps.importance
@@ -335,5 +338,22 @@ class ProjectController
         }
 
         return $slug;
+    }
+
+    private function formatAvatarUrl(Request $request, ?string $avatarUrl): ?string
+    {
+        if (!$avatarUrl) {
+            return null;
+        }
+        if (strpos($avatarUrl, 'http://') === 0 || strpos($avatarUrl, 'https://') === 0) {
+            return $avatarUrl;
+        }
+        $uri = $request->getUri();
+        $baseUrl = $uri->getScheme() . '://' . $uri->getHost();
+        $port = $uri->getPort();
+        if ($port && (($uri->getScheme() === 'http' && $port !== 80) || ($uri->getScheme() === 'https' && $port !== 443))) {
+            $baseUrl .= ':' . $port;
+        }
+        return $baseUrl . $avatarUrl;
     }
 }

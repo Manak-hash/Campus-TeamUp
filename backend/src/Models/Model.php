@@ -13,7 +13,7 @@ abstract class Model
         return (require __DIR__ . '/../../config/database.php')();
     }
 
-    protected static function findById(int $id): ?array
+    public static function findById(int $id): ?array
     {
         $stmt = self::db()->prepare("SELECT * FROM " . static::table() . " WHERE id = ?");
         $stmt->execute([$id]);
@@ -21,7 +21,7 @@ abstract class Model
         return $result ?: null;
     }
 
-    protected static function findAll(array $conditions = [], array $params = []): array
+    public static function findAll(array $conditions = [], array $params = []): array
     {
         $sql = "SELECT * FROM " . static::table();
         if (!empty($conditions)) {
@@ -32,7 +32,7 @@ abstract class Model
         return $stmt->fetchAll();
     }
 
-    protected static function insert(array $data): int
+    public static function insert(array $data): int
     {
         $columns = implode(", ", array_keys($data));
         $placeholders = implode(", ", array_fill(0, count($data), "?"));
@@ -42,7 +42,7 @@ abstract class Model
         return (int) self::db()->lastInsertId();
     }
 
-    protected static function update(array $data, string $where, array $whereParams = []): bool
+    public static function update(array $data, string $where, array $whereParams = []): bool
     {
         $setParts = [];
         foreach (array_keys($data) as $column) {
@@ -53,7 +53,7 @@ abstract class Model
         return $stmt->execute([...array_values($data), ...$whereParams]);
     }
 
-    protected static function delete(string $where, array $params = []): bool
+    public static function delete(string $where, array $params = []): bool
     {
         $sql = "DELETE FROM " . static::table() . " WHERE $where";
         $stmt = self::db()->prepare($sql);

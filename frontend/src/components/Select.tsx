@@ -5,51 +5,42 @@ interface SelectOption {
   label: string;
 }
 
-interface SelectProps {
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: SelectOption[];
   error?: string;
   helper?: string;
-  required?: boolean;
-  disabled?: boolean;
   placeholder?: string;
 }
 
 export const Select: React.FC<SelectProps> = ({
   label,
-  name,
-  value,
-  onChange,
   options,
   error,
   helper,
+  className = '',
   required = false,
   disabled = false,
   placeholder,
+  ...rest
 }) => {
-  const selectClasses = `block w-full rounded-md border shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500 sm:text-sm transition-colors ${
+  const selectClasses = `block w-full px-3 py-2 rounded-md border shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500 sm:text-sm transition-colors ${
     error
       ? 'border-danger focus:border-danger focus:ring-danger'
       : 'border-gray-300 focus:border-primary-500'
-  } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`;
+  } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'} ${className}`;
 
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={rest.id || rest.name} className="block text-sm font-medium text-gray-700 mb-1">
         {label}
         {required && <span className="text-danger ml-1">*</span>}
       </label>
       <select
-        name={name}
-        id={name}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
         required={required}
+        disabled={disabled}
         className={selectClasses}
+        {...rest}
       >
         {placeholder && (
           <option value="">{placeholder}</option>

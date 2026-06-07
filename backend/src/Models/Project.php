@@ -20,7 +20,7 @@ class Project extends Model
     public static function findWithDetails(int $id): ?array
     {
         $sql = "SELECT p.*,
-                u.name as owner_name, u.email as owner_email,
+                u.name as owner_name, u.email as owner_email, u.avatar_url as owner_avatar,
                 (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
                 FROM " . static::table() . " p
                 LEFT JOIN users u ON p.owner_id = u.id

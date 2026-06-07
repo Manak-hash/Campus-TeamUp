@@ -7,8 +7,8 @@ class ProfileTest extends BaseTestCase
     public function testGetProfileReturnsAuthenticatedUserInfo(): void
     {
         // Setup: user 1 exists (from seed)
+        $this->loginAs(1);
         $request = $this->createRequest('GET', '/api/profile', [
-            'User-Id' => '1',
             'Accept' => 'application/json'
         ]);
         
@@ -41,8 +41,8 @@ class ProfileTest extends BaseTestCase
             'academic_level' => 'Senior'
         ];
 
+        $this->loginAs(1);
         $request = $this->createRequest('PUT', '/api/profile', [
-            'User-Id' => '1',
             'Content-Type' => 'application/json'
         ]);
         $request->getBody()->write(json_encode($updateData));

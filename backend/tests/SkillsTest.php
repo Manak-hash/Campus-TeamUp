@@ -26,8 +26,8 @@ class SkillsTest extends BaseTestCase
             ]
         ];
 
+        $this->loginAs(1);
         $request = $this->createRequest('PUT', '/api/profile/skills', [
-            'User-Id' => '1',
             'Content-Type' => 'application/json'
         ]);
         $request->getBody()->write(json_encode($skillsData));
@@ -56,8 +56,8 @@ class SkillsTest extends BaseTestCase
             ]
         ];
 
+        $this->loginAs(1);
         $request = $this->createRequest('PUT', '/api/profile/skills', [
-            'User-Id' => '1',
             'Content-Type' => 'application/json'
         ]);
         $request->getBody()->write(json_encode($skillsData));

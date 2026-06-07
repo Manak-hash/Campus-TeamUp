@@ -19,6 +19,9 @@ class BaseTestCase extends TestCase
     {
         parent::setUp();
 
+        // Clear session
+        $_SESSION = [];
+
         // Initialize in-memory database
         $this->pdo = new PDO('sqlite::memory:');
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -50,11 +53,16 @@ class BaseTestCase extends TestCase
         $routes($this->app);
     }
 
+    protected function loginAs(int $userId): void
+    {
+        $_SESSION['user_id'] = $userId;
+    }
+
     protected function seed(): void
     {
-        // Add a test user
-        $stmt = $this->pdo->prepare("INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)");
-        $stmt->execute(['test@example.com', password_hash('password', PASSWORD_DEFAULT), 'Test User', 'student']);
+        // Add a test user with explicit ID 1
+        $stmt = $this->pdo->prepare("INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([1, 'test@example.com', password_hash('password', PASSWORD_DEFAULT), 'Test User', 'student']);
     }
 
     protected function createRequest(

@@ -13,9 +13,8 @@ class AvatarTest extends BaseTestCase
         $stream = (new StreamFactory())->createStream('fake content');
         $uploadedFile = new UploadedFile($stream, 'test.txt', 'text/plain', $stream->getSize());
 
-        $request = $this->createRequest('POST', '/api/profile/avatar', [
-            'User-Id' => '1'
-        ]);
+        $this->loginAs(1);
+        $request = $this->createRequest('POST', '/api/profile/avatar');
         $request = $request->withUploadedFiles(['avatar' => $uploadedFile]);
 
         $response = $this->app->handle($request);
@@ -31,9 +30,8 @@ class AvatarTest extends BaseTestCase
         $stream = (new StreamFactory())->createStream(str_repeat('0', 3 * 1024 * 1024));
         $uploadedFile = new UploadedFile($stream, 'test.jpg', 'image/jpeg', $stream->getSize());
 
-        $request = $this->createRequest('POST', '/api/profile/avatar', [
-            'User-Id' => '1'
-        ]);
+        $this->loginAs(1);
+        $request = $this->createRequest('POST', '/api/profile/avatar');
         $request = $request->withUploadedFiles(['avatar' => $uploadedFile]);
 
         $response = $this->app->handle($request);
@@ -52,9 +50,8 @@ class AvatarTest extends BaseTestCase
         $stream = (new StreamFactory())->createStreamFromFile($tempFile);
         $uploadedFile = new UploadedFile($stream, 'avatar.png', 'image/png', $stream->getSize());
 
-        $request = $this->createRequest('POST', '/api/profile/avatar', [
-            'User-Id' => '1'
-        ]);
+        $this->loginAs(1);
+        $request = $this->createRequest('POST', '/api/profile/avatar');
         $request = $request->withUploadedFiles(['avatar' => $uploadedFile]);
 
         $response = $this->app->handle($request);
