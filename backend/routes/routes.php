@@ -35,6 +35,9 @@ return function (App $app) {
         $group->post('/projects', [ProjectController::class, 'create'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/projects/{id}', [ProjectController::class, 'update'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->delete('/projects/{id}', [ProjectController::class, 'delete'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->post('/projects/{id}/apply', [ProjectController::class, 'apply'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->get('/projects/{id}/applications', [ProjectController::class, 'getApplications'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->put('/applications/{id}', [ProjectController::class, 'reviewApplication'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
     });
 
     // Health check endpoint

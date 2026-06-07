@@ -12,7 +12,7 @@ class UserController
 
     public function __construct()
     {
-        $this->db = (require __DIR__ . '/../../config/database.php')();
+        $this->db = \CampusTeamUp\Models\Model::db();
     }
 
     public function getProfile(Request $request, Response $response): Response

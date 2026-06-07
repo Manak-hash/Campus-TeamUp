@@ -30,13 +30,26 @@ class Project extends Model
         return $stmt->fetch() ?: null;
     }
 
+    public static function findWithDetailsBySlug(string $slug): ?array
+    {
+        $sql = "SELECT p.*,
+                u.name as owner_name, u.email as owner_email, u.avatar_url as owner_avatar,
+                (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count
+                FROM " . static::table() . " p
+                LEFT JOIN users u ON p.owner_id = u.id
+                WHERE p.slug = ?";
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute([$slug]);
+        return $stmt->fetch() ?: null;
+    }
+
     public static function updateStatusIfFull(int $projectId): void
     {
-        $sql = "UPDATE " . static::table() . " p
+        $sql = "UPDATE " . static::table() . "
                 SET status = 'full'
-                WHERE p.id = ?
-                AND p.max_members <= (SELECT COUNT(*) FROM project_members WHERE project_id = p.id)";
+                WHERE id = ?
+                AND max_members <= (SELECT COUNT(*) FROM project_members WHERE project_id = ?)";
         $stmt = self::db()->prepare($sql);
-        $stmt->execute([$projectId]);
+        $stmt->execute([$projectId, $projectId]);
     }
 }

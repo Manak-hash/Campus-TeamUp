@@ -99,6 +99,18 @@ export const projectService = {
   deleteProject: async (id: string) => {
     const response = await api.delete(`/api/projects/${id}`)
     return response.data
+  },
+  applyToProject: async (idOrSlug: string | number, message: string) => {
+    const response = await api.post(`/api/projects/${idOrSlug}/apply`, { message })
+    return response.data
+  },
+  getProjectApplications: async (idOrSlug: string | number) => {
+    const response = await api.get(`/api/projects/${idOrSlug}/applications`)
+    return response.data
+  },
+  reviewApplication: async (applicationId: number, status: 'accepted' | 'rejected') => {
+    const response = await api.put(`/api/applications/${applicationId}`, { status })
+    return response.data
   }
 }
 

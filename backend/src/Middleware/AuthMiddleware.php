@@ -13,7 +13,7 @@ class AuthMiddleware
 
     public function __construct()
     {
-        $this->db = (require __DIR__ . '/../../config/database.php')();
+        $this->db = \CampusTeamUp\Models\Model::db();
     }
 
     public function __invoke(Request $request, RequestHandler $handler): Response

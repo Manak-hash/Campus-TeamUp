@@ -8,8 +8,18 @@ abstract class Model
 {
     abstract protected static function table(): string;
 
-    protected static function db(): PDO
+    private static ?PDO $customDb = null;
+
+    public static function setDb(?PDO $db): void
     {
+        self::$customDb = $db;
+    }
+
+    public static function db(): PDO
+    {
+        if (self::$customDb !== null) {
+            return self::$customDb;
+        }
         return (require __DIR__ . '/../../config/database.php')();
     }
 

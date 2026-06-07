@@ -34,6 +34,9 @@ class BaseTestCase extends TestCase
         // Seed basic data if needed
         $this->seed();
 
+        // Set test db in Model
+        \CampusTeamUp\Models\Model::setDb($this->pdo);
+
         // Create container
         $containerBuilder = new ContainerBuilder();
         $containerBuilder->addDefinitions([
