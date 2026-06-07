@@ -78,8 +78,8 @@ export default function ProfilePage() {
         <div className="px-6 pb-6">
           <div className="relative flex justify-between items-end -mt-12 mb-6">
             <div className="flex items-end">
-              <img 
-                src={profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`} 
+              <img
+                src={profile.avatar_url ? (profile.avatar_url.startsWith('http') ? profile.avatar_url : `http://localhost:8000${profile.avatar_url}`) : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=random`}
                 alt={profile.name}
                 className="w-32 h-32 rounded-full border-4 border-white bg-gray-100 object-cover"
               />

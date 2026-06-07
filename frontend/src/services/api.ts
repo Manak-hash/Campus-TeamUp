@@ -63,7 +63,7 @@ export const profileService = {
     const formData = new FormData()
     formData.append('avatar', file)
     const response = await api.post('/api/profile/avatar', formData, {
-      headers: { 
+      headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
@@ -75,6 +75,29 @@ export const profileService = {
   },
   updateSkills: async (skills: { skill_id: number, proficiency_level: string }[]) => {
     const response = await api.put('/api/profile/skills', { skills })
+    return response.data
+  }
+}
+
+export const projectService = {
+  getProjects: async (params?: any) => {
+    const response = await api.get('/api/projects', { params })
+    return response.data
+  },
+  getProject: async (id: string) => {
+    const response = await api.get(`/api/projects/${id}`)
+    return response.data
+  },
+  createProject: async (data: any) => {
+    const response = await api.post('/api/projects', data)
+    return response.data
+  },
+  updateProject: async (id: string, data: any) => {
+    const response = await api.put(`/api/projects/${id}`, data)
+    return response.data
+  },
+  deleteProject: async (id: string) => {
+    const response = await api.delete(`/api/projects/${id}`)
     return response.data
   }
 }

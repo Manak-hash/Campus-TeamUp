@@ -44,6 +44,8 @@ class AuthMiddleware
         $response->getBody()->write(json_encode(['error' => 'Unauthorized. Please login.']));
         return $response
             ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Credentials', 'true')
             ->withStatus(401);
     }
 }

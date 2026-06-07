@@ -11,25 +11,33 @@ class CorsMiddleware
 {
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
-        // Handle OPTIONS preflight requests early
+        // Get the origin from the request
+        $origin = $request->getHeaderLine('Origin');
+
+        // Allow all origins in development
+        $allowedOrigin = $origin ?: '*';
+
+        // Handle OPTIONS preflight requests
         if ($request->getMethod() === 'OPTIONS') {
             $response = new SlimResponse();
-            return $response
-                ->withStatus(204)
+
+            // Set all CORS headers for preflight
+            $response = $response
+                ->withHeader('Access-Control-Allow-Origin', $allowedOrigin)
+                ->withHeader('Access-Control-Allow-Credentials', 'true')
                 ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
                 ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, User-Id')
-                ->withHeader('Access-Control-Max-Age', '86400')
-                ->withHeader('Access-Control-Allow-Origin', $request->getHeaderLine('Origin') ?: '*');
+                ->withHeader('Access-Control-Max-Age', '86400');
+
+            return $response->withStatus(204);
         }
 
-        // Process the request
+        // Process the request through the middleware chain
         $response = $handler->handle($request);
 
-        // Simple wildcard for now, or match Origin
-        $requestOrigin = $request->getHeaderLine('Origin') ?: '*';
-
+        // Add CORS headers to all responses
         return $response
-            ->withHeader('Access-Control-Allow-Origin', $requestOrigin)
+            ->withHeader('Access-Control-Allow-Origin', $allowedOrigin)
             ->withHeader('Access-Control-Allow-Credentials', 'true')
             ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, User-Id')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
