@@ -18,8 +18,16 @@ return function (App $app) {
     // Health check endpoint
     $app->get('/api/ping', PingController::class);
 
-<<<<<<< Updated upstream
+    // API routes
     $app->group('/api', function (RouteCollectorProxy $group) {
+        // Auth routes
+        $group->post('/register', \CampusTeamUp\Controllers\AuthController::class . ':register');
+        $group->post('/login', \CampusTeamUp\Controllers\AuthController::class . ':login');
+        
+        // Protected Auth routes
+        $group->post('/logout', \CampusTeamUp\Controllers\AuthController::class . ':logout')->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->get('/me', \CampusTeamUp\Controllers\AuthController::class . ':me')->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+
         // Profile routes
         $group->get('/profile', [UserController::class, 'getProfile']);
         $group->put('/profile', [UserController::class, 'updateProfile']);
@@ -31,18 +39,5 @@ return function (App $app) {
 
         // Avatar route
         $group->post('/profile/avatar', [UserController::class, 'uploadAvatar']);
-=======
-    // API routes
-    $app->group('/api', function (RouteCollectorProxy $group) {
-        // Auth routes
-        $group->post('/register', \CampusTeamUp\Controllers\AuthController::class . ':register');
-        $group->post('/login', \CampusTeamUp\Controllers\AuthController::class . ':login');
-        
-        // Protected Auth routes
-        $group->post('/logout', \CampusTeamUp\Controllers\AuthController::class . ':logout')->add(new \CampusTeamUp\Middleware\AuthMiddleware());
-        $group->get('/me', \CampusTeamUp\Controllers\AuthController::class . ':me')->add(new \CampusTeamUp\Middleware\AuthMiddleware());
-
-        // Future routes: /api/users /api/projects etc
->>>>>>> Stashed changes
     });
 };

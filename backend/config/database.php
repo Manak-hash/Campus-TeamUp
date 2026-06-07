@@ -1,14 +1,5 @@
 <?php
 
-<<<<<<< Updated upstream
-=======
-use Dotenv\Dotenv;
-
-// Load environment variables
-$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
-
->>>>>>> Stashed changes
 return function (): PDO {
     $dbPath = $_ENV['DB_PATH'] ?? __DIR__ . '/../database/campus-teamup.db';
 

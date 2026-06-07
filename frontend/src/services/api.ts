@@ -5,6 +5,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
 // Request interceptor
@@ -26,11 +27,28 @@ api.interceptors.response.use(
   }
 )
 
+export const authService = {
+  register: async (data: any) => {
+    const response = await api.post('/api/register', data)
+    return response.data
+  },
+  login: async (credentials: any) => {
+    const response = await api.post('/api/login', credentials)
+    return response.data
+  },
+  logout: async () => {
+    const response = await api.post('/api/logout')
+    return response.data
+  },
+  getMe: async () => {
+    const response = await api.get('/api/me')
+    return response.data
+  }
+}
+
 export const profileService = {
   getProfile: async () => {
-    const response = await api.get('/api/profile', {
-      headers: { 'User-Id': '1' } // Mock auth
-    })
+    const response = await api.get('/api/profile')
     return response.data
   },
   getUserProfile: async (id: string) => {
@@ -38,9 +56,7 @@ export const profileService = {
     return response.data
   },
   updateProfile: async (data: any) => {
-    const response = await api.put('/api/profile', data, {
-      headers: { 'User-Id': '1' } // Mock auth
-    })
+    const response = await api.put('/api/profile', data)
     return response.data
   },
   uploadAvatar: async (file: File) => {
@@ -48,7 +64,6 @@ export const profileService = {
     formData.append('avatar', file)
     const response = await api.post('/api/profile/avatar', formData, {
       headers: { 
-        'User-Id': '1', // Mock auth
         'Content-Type': 'multipart/form-data'
       }
     })
@@ -59,9 +74,7 @@ export const profileService = {
     return response.data
   },
   updateSkills: async (skills: { skill_id: number, proficiency_level: string }[]) => {
-    const response = await api.put('/api/profile/skills', { skills }, {
-      headers: { 'User-Id': '1' } // Mock auth
-    })
+    const response = await api.put('/api/profile/skills', { skills })
     return response.data
   }
 }

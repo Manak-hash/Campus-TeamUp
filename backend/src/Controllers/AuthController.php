@@ -21,6 +21,8 @@ class AuthController
         $name = trim($body['name'] ?? '');
         $email = trim($body['email'] ?? '');
         $password = $body['password'] ?? '';
+        $department = trim($body['department'] ?? '');
+        $academicLevel = trim($body['academic_level'] ?? '');
 
         // Basic validation
         if (empty($name) || empty($email) || empty($password)) {
@@ -44,8 +46,8 @@ class AuthController
 
         // Hash password and insert user
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->db->prepare("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)");
-        $stmt->execute([$name, $email, $passwordHash]);
+        $stmt = $this->db->prepare("INSERT INTO users (name, email, password_hash, department, academic_level) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $email, $passwordHash, $department, $academicLevel]);
 
         $userId = $this->db->lastInsertId();
         $_SESSION['user_id'] = $userId;
@@ -54,6 +56,8 @@ class AuthController
             'id' => $userId,
             'name' => $name,
             'email' => $email,
+            'department' => $department,
+            'academic_level' => $academicLevel,
             'role' => 'student'
         ];
 
