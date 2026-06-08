@@ -238,18 +238,61 @@ class ApplicationTest extends BaseTestCase
 
     public function testGetApplicationsMine(): void
     {
+        // Setup: user 3 has two applications: one pending, one accepted
         $stmt = $this->pdo->prepare("INSERT INTO applications (id, project_id, applicant_id, message, status) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([105, 10, 3, 'My application', 'pending']);
+        $stmt->execute([105, 10, 3, 'My pending app', 'pending']);
+        
+        // Seed another project for another application
+        $stmt = $this->pdo->prepare("INSERT INTO projects (id, title, slug, description, category, owner_id, max_members, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([11, 'Second Project', 'second-project', 'Desc', 'design', 2, 5, 'open']);
+        
+        $stmt = $this->pdo->prepare("INSERT INTO applications (id, project_id, applicant_id, message, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([106, 11, 3, 'My accepted app', 'accepted']);
 
+        // Case 1: Unauthenticated request -> returns 401
+        $requestUnauth = $this->createRequest('GET', '/api/applications/mine');
+        $responseUnauth = $this->app->handle($requestUnauth);
+        $this->assertEquals(401, $responseUnauth->getStatusCode());
+
+        // Case 2: Authenticated request -> returns all user 3 applications with full project context
         $this->loginAs(3);
         $request = $this->createRequest('GET', '/api/applications/mine');
         $response = $this->app->handle($request);
         $payload = json_decode((string) $response->getBody(), true);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertCount(1, $payload);
-        $this->assertEquals('Test Project', $payload[0]['project_title']);
-        $this->assertEquals('test-project', $payload[0]['project_slug']);
-        $this->assertEquals('My application', $payload[0]['message']);
+        $this->assertCount(2, $payload);
+        
+        // Assert order (newest first)
+        $this->assertEquals('accepted', $payload[0]['status']);
+        $this->assertEquals('pending', $payload[1]['status']);
+
+        // Assert nested project context exists and matches
+        $this->assertArrayHasKey('project', $payload[0]);
+        $this->assertEquals(11, $payload[0]['project']['id']);
+        $this->assertEquals('Second Project', $payload[0]['project']['title']);
+        $this->assertEquals('second-project', $payload[0]['project']['slug']);
+        $this->assertEquals('design', $payload[0]['project']['category']);
+        $this->assertEquals('open', $payload[0]['project']['current_status']);
+        $this->assertEquals('Owner User', $payload[0]['project']['owner_name']);
+
+        // Case 3: Filtering by status=pending -> returns only the pending application
+        $requestFilter = $this->createRequest('GET', '/api/applications/mine?status=pending');
+        $responseFilter = $this->app->handle($requestFilter);
+        $payloadFilter = json_decode((string) $responseFilter->getBody(), true);
+
+        $this->assertEquals(200, $responseFilter->getStatusCode());
+        $this->assertCount(1, $payloadFilter);
+        $this->assertEquals('pending', $payloadFilter[0]['status']);
+        $this->assertEquals('My pending app', $payloadFilter[0]['message']);
+
+        // Case 4: No applications exist (e.g. user 4) -> returns []
+        $this->loginAs(4);
+        $requestEmpty = $this->createRequest('GET', '/api/applications/mine');
+        $responseEmpty = $this->app->handle($requestEmpty);
+        $payloadEmpty = json_decode((string) $responseEmpty->getBody(), true);
+
+        $this->assertEquals(200, $responseEmpty->getStatusCode());
+        $this->assertEquals([], $payloadEmpty);
     }
 }

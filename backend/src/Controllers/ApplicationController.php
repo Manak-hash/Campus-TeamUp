@@ -233,17 +233,47 @@ class ApplicationController
     public function mine(Request $request, Response $response): Response
     {
         $userId = $request->getAttribute('user')['id'];
+        $params = $request->getQueryParams();
+        $statusFilter = $params['status'] ?? null;
 
-        $stmt = $this->db->prepare("
-            SELECT a.id, a.message, a.status, a.created_at, a.project_id,
-                   p.title as project_title, p.slug as project_slug, p.category as project_category, p.status as project_status, p.owner_id
+        $sql = "
+            SELECT a.id, a.message, a.status, a.created_at, a.updated_at, a.project_id,
+                   p.title as project_title, p.slug as project_slug, p.category as project_category, p.status as current_status,
+                   u.name as owner_name
             FROM applications a
             JOIN projects p ON a.project_id = p.id
+            JOIN users u ON p.owner_id = u.id
             WHERE a.applicant_id = ?
-            ORDER BY a.created_at DESC
-        ");
-        $stmt->execute([$userId]);
+        ";
+        $queryParams = [$userId];
+
+        if ($statusFilter) {
+            $sql .= " AND a.status = ?";
+            $queryParams[] = $statusFilter;
+        }
+
+        $sql .= " ORDER BY a.created_at DESC, a.id DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($queryParams);
         $applications = $stmt->fetchAll();
+
+        foreach ($applications as &$app) {
+            $app['project'] = [
+                'id' => (int)$app['project_id'],
+                'title' => $app['project_title'],
+                'slug' => $app['project_slug'],
+                'category' => $app['project_category'],
+                'current_status' => $app['current_status'],
+                'owner_name' => $app['owner_name']
+            ];
+            
+            // Retain flat mappings for backwards compatibility in frontend
+            $app['project_title'] = $app['project_title'];
+            $app['project_slug'] = $app['project_slug'];
+            $app['project_category'] = $app['project_category'];
+            $app['project_status'] = $app['current_status'];
+        }
 
         $response->getBody()->write(json_encode($applications));
         return $response->withHeader('Content-Type', 'application/json');
