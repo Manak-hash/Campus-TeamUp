@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { projectService, profileService } from '../services/api';
+import { projectsService } from '../services/projects.service';
+import { skillsService } from '../services/skills.service';
 import { EmptyState } from '../components/EmptyState';
 import { ProjectCard, Project } from '../components/ProjectCard';
 import { FilterBar } from '../components/FilterBar';
@@ -49,7 +50,7 @@ const ExploreProjectsPage: React.FC = () => {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const skillsData = await profileService.getSkills();
+        const skillsData = await skillsService.getAllSkills();
         setSkillsList(skillsData);
       } catch (err) {
         console.error('Failed to load skills list:', err);
@@ -64,7 +65,7 @@ const ExploreProjectsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await projectService.getProjects({
+        const data = await projectsService.getProjects({
           search: search || undefined,
           category: category || undefined,
           skill: skill || undefined,

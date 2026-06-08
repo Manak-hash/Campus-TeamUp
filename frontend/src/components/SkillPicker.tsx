@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { profileService } from '../services/api'
+import { skillsService } from '../services/skills.service'
 import SkillBadge from './SkillBadge'
 
 interface Skill {
@@ -26,7 +26,7 @@ export default function SkillPicker({ selectedSkills, onChange }: SkillPickerPro
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const data = await profileService.getSkills()
+        const data = await skillsService.getAllSkills()
         setAllSkills(data)
       } catch (err) {
         console.error('Failed to fetch skills', err)

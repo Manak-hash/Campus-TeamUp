@@ -118,6 +118,45 @@ class UserController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function createSkill(Request $request, Response $response): Response
+    {
+        $user = $request->getAttribute('user');
+        if (!$user) {
+            $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
+        }
+
+        $data = $request->getParsedBody();
+        $name = trim($data['name'] ?? '');
+
+        if (empty($name)) {
+            $response->getBody()->write(json_encode(['error' => 'Skill name is required']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        try {
+            // Check if exists
+            $stmt = $this->db->prepare("SELECT id, name FROM skills WHERE LOWER(name) = LOWER(?)");
+            $stmt->execute([$name]);
+            $existing = $stmt->fetch();
+
+            if ($existing) {
+                $response->getBody()->write(json_encode($existing));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $stmt = $this->db->prepare("INSERT INTO skills (name) VALUES (?)");
+            $stmt->execute([$name]);
+            $skillId = (int)$this->db->lastInsertId();
+
+            $response->getBody()->write(json_encode(['id' => $skillId, 'name' => $name]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => 'Failed to create skill: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
     public function updateSkills(Request $request, Response $response): Response
     {
         $user = $request->getAttribute('user');

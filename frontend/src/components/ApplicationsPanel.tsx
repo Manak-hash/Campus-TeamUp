@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { projectService } from '../services/api';
+import { projectsService } from '../services/projects.service';
 import Avatar from './Avatar';
 import SkillBadge from './SkillBadge';
 import Button from './Button';
@@ -34,7 +34,7 @@ export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const data = await projectService.getProjectApplications(projectIdOrSlug);
+      const data = await projectsService.getProjectApplications(projectIdOrSlug);
       setApplications(data);
       setError(null);
     } catch (err: any) {
@@ -51,7 +51,7 @@ export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({
   const handleReview = async (appId: number, status: 'accepted' | 'rejected') => {
     setActioningId(appId);
     try {
-      await projectService.reviewApplication(appId, status);
+      await projectsService.reviewApplication(appId, status);
       // Refresh applications list
       await fetchApplications();
       if (status === 'accepted' && onMemberAdded) {

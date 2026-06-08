@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { projectService, profileService } from '../services/api';
+import { projectsService } from '../services/projects.service';
+import { profileService } from '../services/profile.service';
 import StatusBadge from '../components/StatusBadge';
 import Avatar from '../components/Avatar';
 import Button from '../components/Button';
@@ -50,7 +51,7 @@ const ProjectDetailPage: React.FC = () => {
     if (!slug) return;
     try {
       setLoading(true);
-      const data = await projectService.getProject(slug);
+      const data = await projectsService.getProject(slug);
       setProject(data);
       setError(null);
     } catch (err: any) {
@@ -85,7 +86,7 @@ const ProjectDetailPage: React.FC = () => {
 
   const handleApplySubmit = async (message: string) => {
     if (!project) return;
-    await projectService.applyToProject(project.id, message);
+    await projectsService.applyToProject(project.id, message);
     // Refresh details to update application status badge
     await fetchProjectDetails();
   };
@@ -94,7 +95,7 @@ const ProjectDetailPage: React.FC = () => {
     if (!project) return;
     if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
       try {
-        await projectService.deleteProject(project.id.toString());
+        await projectsService.deleteProject(project.id.toString());
         navigate('/explore');
       } catch (err: any) {
         alert(err.response?.data?.error || 'Failed to delete project.');

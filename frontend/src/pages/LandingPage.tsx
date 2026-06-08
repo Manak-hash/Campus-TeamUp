@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { projectService } from '../services/api';
+import { projectsService } from '../services/projects.service';
 import ProjectCard, { Project } from '../components/ProjectCard';
 import Button from '../components/Button';
 import Skeleton from '../components/Skeleton';
@@ -26,7 +26,7 @@ export const LandingPage: React.FC = () => {
       try {
         setProjectsLoading(true);
         // Fetch the 3 most recent open projects
-        const data = await projectService.getProjects({ limit: 3, status: 'open' });
+        const data = await projectsService.getProjects({ limit: 3, status: 'open' });
         setProjects(data.projects || []);
       } catch (err: any) {
         console.error('Failed to load featured projects:', err);

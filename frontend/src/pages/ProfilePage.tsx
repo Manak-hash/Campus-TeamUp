@@ -1,21 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { profileService } from '../services/api'
-
-interface UserProfile {
-  id: number
-  name: string
-  email: string
-  department: string
-  academic_level: string
-  bio: string
-  avatar_url: string
-  skills: { id: number, name: string, proficiency_level: string }[]
-}
+import { profileService } from '../services/profile.service'
+import type { User } from '../types'
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profile, setProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -110,8 +100,8 @@ export default function ProfilePage() {
               <section>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Skills</h2>
                 <div className="flex flex-wrap gap-2">
-                  {profile.skills.length > 0 ? (
-                    profile.skills.map(skill => (
+                  {(profile.skills || []).length > 0 ? (
+                    (profile.skills || []).map(skill => (
                       <span 
                         key={skill.id} 
                         className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100"

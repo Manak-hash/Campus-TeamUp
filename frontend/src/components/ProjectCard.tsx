@@ -5,27 +5,8 @@ import { StatusBadge } from './StatusBadge';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
 
-export interface ProjectSkill {
-  id: number;
-  name: string;
-  importance: string;
-}
-
-export interface Project {
-  id: number;
-  title: string;
-  slug: string;
-  description: string;
-  category: string;
-  status: 'open' | 'full' | 'closed';
-  max_members: number;
-  member_count: number;
-  owner_id: number;
-  owner_name: string;
-  owner_avatar: string | null;
-  skills: ProjectSkill[];
-  created_at: string;
-}
+import type { Project, ProjectSkill } from '../types';
+export type { Project, ProjectSkill };
 
 interface ProjectCardProps {
   project: Project;
@@ -96,7 +77,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </p>
 
         <div className="flex flex-wrap gap-1.5 mt-auto">
-          {project.skills.slice(0, 4).map((s) => (
+          {(project.skills || []).slice(0, 4).map((s) => (
             <span
               key={s.id}
               className={`text-xs px-2 py-0.5 rounded border ${
@@ -109,9 +90,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               {s.name}
             </span>
           ))}
-          {project.skills.length > 4 && (
+          {(project.skills || []).length > 4 && (
             <span className="text-xs text-gray-400 py-0.5 px-1">
-              +{project.skills.length - 4} more
+              +{(project.skills || []).length - 4} more
             </span>
           )}
         </div>

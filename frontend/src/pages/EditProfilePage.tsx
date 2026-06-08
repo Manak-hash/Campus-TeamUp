@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { profileService } from '../services/api'
+import { profileService } from '../services/profile.service'
 import SkillPicker from '../components/SkillPicker'
 
 interface UserSkill {

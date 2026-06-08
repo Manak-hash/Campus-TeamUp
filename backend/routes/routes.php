@@ -24,6 +24,7 @@ return function (App $app) {
 
         // Skills routes (protected)
         $group->get('/skills', [UserController::class, 'getSkills']);
+        $group->post('/skills', [UserController::class, 'createSkill'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/profile/skills', [UserController::class, 'updateSkills'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
 
         // Avatar route (protected)
