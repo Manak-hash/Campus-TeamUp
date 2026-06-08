@@ -1,7 +1,6 @@
 import api from './api';
 import type {
   Project,
-  Application,
 } from '../types';
 
 export interface ProjectFilters {
@@ -65,7 +64,7 @@ export const projectsService = {
   },
 
   reviewApplication: async (applicationId: number, status: 'accepted' | 'rejected'): Promise<{ message: string }> => {
-    const response = await api.put<{ message: string }>(`/api/applications/${applicationId}`, { status });
+    const response = await api.put<{ message: string }>(`/api/applications/${applicationId}/status`, { status });
     return response.data;
   },
 };

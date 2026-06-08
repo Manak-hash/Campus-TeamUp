@@ -9,6 +9,7 @@ import Button from '../components/Button';
 import Skeleton from '../components/Skeleton';
 import ApplicationModal from '../components/ApplicationModal';
 import ApplicationsPanel from '../components/ApplicationsPanel';
+import { useToast } from '../context/ToastContext';
 
 interface Project {
   id: number;
@@ -40,6 +41,7 @@ const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showSuccess, showError } = useToast();
   
   const [project, setProject] = useState<Project | null>(null);
   const [userProfile, setUserProfile] = useState<any | null>(null);
@@ -86,9 +88,15 @@ const ProjectDetailPage: React.FC = () => {
 
   const handleApplySubmit = async (message: string) => {
     if (!project) return;
-    await projectsService.applyToProject(project.id, message);
-    // Refresh details to update application status badge
-    await fetchProjectDetails();
+    try {
+      await projectsService.applyToProject(project.id, message);
+      showSuccess('Application submitted successfully!');
+      await fetchProjectDetails();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || 'Failed to submit application. Please try again.';
+      showError(errMsg);
+      throw err;
+    }
   };
 
   const handleDelete = async () => {

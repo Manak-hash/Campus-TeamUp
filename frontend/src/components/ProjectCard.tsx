@@ -41,8 +41,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             <div className="flex-shrink-0">
               <Avatar
                 src={project.owner_avatar || undefined}
-                alt={project.owner_name}
-                name={project.owner_name}
+                alt={project.owner_name || 'User'}
+                name={project.owner_name || 'U'}
                 size="sm"
               />
             </div>
