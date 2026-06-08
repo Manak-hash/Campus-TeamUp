@@ -114,7 +114,7 @@ class ProjectTest extends BaseTestCase
         $stmt->execute([10, 1, 2, 'Message text', 'pending']);
 
         $this->loginAs(1); // Owner
-        $request = $this->createRequest('PUT', '/api/applications/10', [
+        $request = $this->createRequest('PUT', '/api/applications/10/status', [
             'Content-Type' => 'application/json'
         ]);
         $request->getBody()->write(json_encode(['status' => 'accepted']));
