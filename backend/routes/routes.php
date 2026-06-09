@@ -6,6 +6,7 @@ use CampusTeamUp\Controllers\PingController;
 use CampusTeamUp\Controllers\UserController;
 use CampusTeamUp\Controllers\ProjectController;
 use CampusTeamUp\Controllers\ApplicationController;
+use CampusTeamUp\Controllers\NotificationController;
 
 return function (App $app) {
     // API routes
@@ -44,6 +45,12 @@ return function (App $app) {
         $group->get('/applications/mine', [ApplicationController::class, 'mine'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/applications/{id}/status', [ApplicationController::class, 'reviewApplication'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->delete('/applications/{id}', [ApplicationController::class, 'cancel'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+
+        // Notification routes (protected) — order matters: /read-all before /{id}/read
+        $group->get('/notifications', [NotificationController::class, 'index'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->put('/notifications/read-all', [NotificationController::class, 'markAllRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->put('/notifications/{id}/read', [NotificationController::class, 'markRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
     });
 
     // Health check endpoint
