@@ -33,6 +33,16 @@ export const projectsService = {
     return response.data;
   },
 
+  getMyOwnedProjects: async (): Promise<{ projects: Project[] }> => {
+    const response = await api.get<{ projects: Project[] }>('/api/projects/my-owned');
+    return response.data;
+  },
+
+  getMyTeamProjects: async (): Promise<{ projects: Project[] }> => {
+    const response = await api.get<{ projects: Project[] }>('/api/projects/my-teams');
+    return response.data;
+  },
+
   getProject: async (idOrSlug: string): Promise<any> => {
     const response = await api.get<any>(`/api/projects/${idOrSlug}`);
     return response.data;

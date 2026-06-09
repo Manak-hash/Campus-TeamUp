@@ -34,6 +34,8 @@ return function (App $app) {
 
         // Project routes
         $group->get('/projects', [ProjectController::class, 'index']);
+        $group->get('/projects/my-owned', [ProjectController::class, 'getMyOwned'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->get('/projects/my-teams', [ProjectController::class, 'getMyTeams'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->get('/projects/{id}', [ProjectController::class, 'show']);
         $group->post('/projects', [ProjectController::class, 'create'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/projects/{id}', [ProjectController::class, 'update'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());

@@ -345,7 +345,12 @@ const ProjectDetailPage: React.FC = () => {
           {isOwner && (
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Applications Management</h3>
-              <ApplicationsPanel projectIdOrSlug={project.id} onMemberAdded={fetchProjectDetails} />
+              <ApplicationsPanel
+                projectIdOrSlug={project.id}
+                onMemberAdded={fetchProjectDetails}
+                maxMembers={project.max_members}
+                currentMemberCount={project.members?.length || 0}
+              />
             </div>
           )}
 

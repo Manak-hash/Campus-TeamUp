@@ -20,11 +20,15 @@ interface Application {
 interface ApplicationsPanelProps {
   projectIdOrSlug: string | number;
   onMemberAdded?: () => void;
+  maxMembers?: number;
+  currentMemberCount?: number;
 }
 
 export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({
   projectIdOrSlug,
   onMemberAdded,
+  maxMembers = 10,
+  currentMemberCount = 0,
 }) => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,9 +87,29 @@ export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({
 
   const pendingApps = applications.filter((app) => app.status === 'pending');
   const pastApps = applications.filter((app) => app.status !== 'pending');
+  const acceptedCount = applications.filter((app) => app.status === 'accepted').length;
+  const isFull = (currentMemberCount + acceptedCount) >= maxMembers;
 
   return (
     <div className="space-y-6">
+      {/* Member Count Display */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span className="text-sm font-medium text-blue-900">
+            Team: {currentMemberCount}/{maxMembers} members
+            {acceptedCount > 0 && ` (${acceptedCount} new applicants accepted)`}
+          </span>
+        </div>
+        {isFull && (
+          <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-1 rounded-full border border-orange-200">
+            Team Full
+          </span>
+        )}
+      </div>
+
       {/* Pending Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -138,7 +162,8 @@ export const ApplicationsPanel: React.FC<ApplicationsPanelProps> = ({
                       size="sm"
                       onClick={() => handleReview(app.id, 'accepted')}
                       loading={actioningId === app.id}
-                      disabled={actioningId !== null}
+                      disabled={actioningId !== null || isFull}
+                      title={isFull ? 'Project team is full' : 'Accept this application'}
                     >
                       Accept
                     </Button>

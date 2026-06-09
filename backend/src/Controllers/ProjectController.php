@@ -92,6 +92,71 @@ class ProjectController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function getMyOwned(Request $request, Response $response): Response
+    {
+        $userId = $request->getAttribute('user')['id'];
+
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.name as owner_name, u.avatar_url as owner_avatar,
+                   (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count,
+                   (SELECT COUNT(*) FROM applications WHERE project_id = p.id AND status = 'pending') as pending_applicant_count
+            FROM projects p
+            LEFT JOIN users u ON p.owner_id = u.id
+            WHERE p.owner_id = ?
+            ORDER BY p.created_at DESC
+        ");
+        $stmt->execute([$userId]);
+        $projects = $stmt->fetchAll();
+
+        foreach ($projects as &$project) {
+            $skillStmt = $this->db->prepare("
+                SELECT s.id, s.name, ps.importance
+                FROM skills s
+                JOIN project_skills ps ON s.id = ps.skill_id
+                WHERE ps.project_id = ?
+            ");
+            $skillStmt->execute([$project['id']]);
+            $project['skills'] = $skillStmt->fetchAll();
+            $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
+        }
+
+        $response->getBody()->write(json_encode(['projects' => $projects]));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function getMyTeams(Request $request, Response $response): Response
+    {
+        $userId = $request->getAttribute('user')['id'];
+
+        $stmt = $this->db->prepare("
+            SELECT p.*, u.name as owner_name, u.avatar_url as owner_avatar,
+                   (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count,
+                   pm.role as user_role
+            FROM projects p
+            LEFT JOIN users u ON p.owner_id = u.id
+            JOIN project_members pm ON p.id = pm.project_id
+            WHERE pm.user_id = ? AND pm.role != 'owner'
+            ORDER BY p.created_at DESC
+        ");
+        $stmt->execute([$userId]);
+        $projects = $stmt->fetchAll();
+
+        foreach ($projects as &$project) {
+            $skillStmt = $this->db->prepare("
+                SELECT s.id, s.name, ps.importance
+                FROM skills s
+                JOIN project_skills ps ON s.id = ps.skill_id
+                WHERE ps.project_id = ?
+            ");
+            $skillStmt->execute([$project['id']]);
+            $project['skills'] = $skillStmt->fetchAll();
+            $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
+        }
+
+        $response->getBody()->write(json_encode(['projects' => $projects]));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function show(Request $request, Response $response, array $args): Response
     {
         $idOrSlug = $args['id'];
@@ -155,6 +220,11 @@ class ProjectController
                 $project['user_application_status'] = $status;
             }
         }
+
+        // Count pending applications for dashboard badge
+        $pendingStmt = $this->db->prepare("SELECT COUNT(*) FROM applications WHERE project_id = ? AND status = 'pending'");
+        $pendingStmt->execute([$projectId]);
+        $project['pending_applicant_count'] = (int)$pendingStmt->fetchColumn();
 
         $response->getBody()->write(json_encode($project));
         return $response->withHeader('Content-Type', 'application/json');
