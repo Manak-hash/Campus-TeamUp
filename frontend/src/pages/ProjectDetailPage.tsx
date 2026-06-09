@@ -35,6 +35,7 @@ interface Project {
     skills: { id: number; name: string; proficiency_level: string }[];
   }[];
   user_application_status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | null;
+  skill_match_score?: number | null;
 }
 
 const ProjectDetailPage: React.FC = () => {
@@ -168,14 +169,14 @@ const ProjectDetailPage: React.FC = () => {
   const percentMatch = requiredSkills.length > 0 ? Math.round((matchedCount / requiredSkills.length) * 100) : 100;
 
   const getMatchColorClass = (percent: number) => {
-    if (percent >= 75) return 'bg-green-500';
-    if (percent >= 40) return 'bg-amber-500';
+    if (percent >= 70) return 'bg-green-500';
+    if (percent >= 40) return 'bg-yellow-500';
     return 'bg-gray-400';
   };
 
   const getMatchTextClass = (percent: number) => {
-    if (percent >= 75) return 'text-green-600';
-    if (percent >= 40) return 'text-amber-600';
+    if (percent >= 70) return 'text-green-600';
+    if (percent >= 40) return 'text-yellow-600';
     return 'text-gray-500';
   };
 
@@ -200,6 +201,17 @@ const ProjectDetailPage: React.FC = () => {
                 {project.category.replace('-', ' ')}
               </span>
               <StatusBadge status={project.status} />
+              {project.skill_match_score !== undefined && project.skill_match_score !== null && (
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${
+                  project.skill_match_score >= 70
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : project.skill_match_score >= 40
+                    ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                    : 'bg-gray-50 text-gray-700 border-gray-200'
+                }`} title="Skill match with your profile">
+                  {project.skill_match_score}% Match
+                </span>
+              )}
               {project.deadline && (
                 <span className="text-xs text-gray-500 font-medium bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100 flex items-center">
                   <svg className="w-3.5 h-3.5 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -32,7 +32,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <span className="text-xs font-semibold text-primary-600 uppercase tracking-wider">
             {getCategoryLabel(project.category)}
           </span>
-          <StatusBadge status={project.status} />
+          <div className="flex items-center space-x-2">
+            {project.skill_match_score !== undefined && project.skill_match_score !== null && (
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                project.skill_match_score >= 70
+                  ? 'bg-green-50 text-green-700 border-green-200'
+                  : project.skill_match_score >= 40
+                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                  : 'bg-gray-50 text-gray-700 border-gray-200'
+              }`} title="Skill match with your profile">
+                {project.skill_match_score}% Match
+              </span>
+            )}
+            <StatusBadge status={project.status} />
+          </div>
         </div>
       }
       footer={

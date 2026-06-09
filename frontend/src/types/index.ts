@@ -65,6 +65,7 @@ export interface Project {
   owner_avatar?: string | null;
   pending_applicant_count?: number;
   user_role?: string;
+  skill_match_score?: number | null;
 }
 
 /** Payload sent when creating or updating a project */

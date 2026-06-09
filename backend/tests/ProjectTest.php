@@ -139,4 +139,55 @@ class ProjectTest extends BaseTestCase
         $stmt->execute();
         $this->assertEquals('full', $stmt->fetchColumn());
     }
+
+    public function testSkillMatchScore(): void
+    {
+        // 1. Test unauthenticated: score should be null
+        $request = $this->createRequest('GET', '/api/projects/1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('skill_match_score', $payload);
+        $this->assertNull($payload['skill_match_score']);
+
+        // 2. Setup project required skills:
+        // Project 1 (id = 1) requires React (skill_id = 1) and TypeScript (skill_id = 2)
+        $this->pdo->prepare("INSERT INTO project_skills (project_id, skill_id, importance) VALUES (1, 1, 'required')")->execute();
+        $this->pdo->prepare("INSERT INTO project_skills (project_id, skill_id, importance) VALUES (1, 2, 'required')")->execute();
+        // and has PHP (skill_id = 3) as nice_to_have
+        $this->pdo->prepare("INSERT INTO project_skills (project_id, skill_id, importance) VALUES (1, 3, 'nice_to_have')")->execute();
+
+        // Setup user 2 skills:
+        // User 2 has React (skill_id = 1) and PHP (skill_id = 3)
+        $this->pdo->prepare("INSERT INTO user_skills (user_id, skill_id, proficiency_level) VALUES (2, 1, 'intermediate')")->execute();
+        $this->pdo->prepare("INSERT INTO user_skills (user_id, skill_id, proficiency_level) VALUES (2, 3, 'advanced')")->execute();
+
+        // Log in as User 2
+        $this->loginAs(2);
+
+        // Fetch project 1: user has 1 of 2 required skills (React), so score = 50% (nice_to_have PHP is ignored)
+        $request = $this->createRequest('GET', '/api/projects/1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(50, $payload['skill_match_score']);
+
+        // Fetch project list: check if it matches there too
+        $requestList = $this->createRequest('GET', '/api/projects');
+        $responseList = $this->app->handle($requestList);
+        $payloadList = json_decode((string) $responseList->getBody(), true);
+        $this->assertEquals(200, $responseList->getStatusCode());
+        $this->assertEquals(50, $payloadList['projects'][0]['skill_match_score']);
+
+        // 3. Test project with no required skills:
+        // Seed another project (id = 2) with no required skills
+        $stmt = $this->pdo->prepare("INSERT INTO projects (id, title, slug, description, category, owner_id, max_members, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([2, 'Project Two', 'project-two', 'Description of project two', 'design', 1, 2, 'open']);
+        
+        $request = $this->createRequest('GET', '/api/projects/2');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertNull($payload['skill_match_score']);
+    }
 }

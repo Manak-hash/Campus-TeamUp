@@ -68,16 +68,19 @@ class ProjectController
         $stmt->execute([...$queryParams, $limit, $offset]);
         $projects = $stmt->fetchAll();
 
+        $currentUserId = $_SESSION['user_id'] ?? null;
         foreach ($projects as &$project) {
+            $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
                 SELECT s.id, s.name, ps.importance
                 FROM skills s
                 JOIN project_skills ps ON s.id = ps.skill_id
                 WHERE ps.project_id = ?
             ");
-            $skillStmt->execute([$project['id']]);
+            $skillStmt->execute([$projectId]);
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
+            $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $currentUserId);
         }
 
         $response->getBody()->write(json_encode([
@@ -109,15 +112,17 @@ class ProjectController
         $projects = $stmt->fetchAll();
 
         foreach ($projects as &$project) {
+            $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
                 SELECT s.id, s.name, ps.importance
                 FROM skills s
                 JOIN project_skills ps ON s.id = ps.skill_id
                 WHERE ps.project_id = ?
             ");
-            $skillStmt->execute([$project['id']]);
+            $skillStmt->execute([$projectId]);
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
+            $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $userId);
         }
 
         $response->getBody()->write(json_encode(['projects' => $projects]));
@@ -142,15 +147,17 @@ class ProjectController
         $projects = $stmt->fetchAll();
 
         foreach ($projects as &$project) {
+            $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
                 SELECT s.id, s.name, ps.importance
                 FROM skills s
                 JOIN project_skills ps ON s.id = ps.skill_id
                 WHERE ps.project_id = ?
             ");
-            $skillStmt->execute([$project['id']]);
+            $skillStmt->execute([$projectId]);
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
+            $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $userId);
         }
 
         $response->getBody()->write(json_encode(['projects' => $projects]));
@@ -225,6 +232,9 @@ class ProjectController
         $pendingStmt = $this->db->prepare("SELECT COUNT(*) FROM applications WHERE project_id = ? AND status = 'pending'");
         $pendingStmt->execute([$projectId]);
         $project['pending_applicant_count'] = (int)$pendingStmt->fetchColumn();
+
+        // Calculate skill match score
+        $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $currentUserId);
 
         $response->getBody()->write(json_encode($project));
         return $response->withHeader('Content-Type', 'application/json');
@@ -458,5 +468,36 @@ class ProjectController
             $baseUrl .= ':' . $port;
         }
         return $baseUrl . $avatarUrl;
+    }
+
+    private function calculateSkillMatchScore(int $projectId, ?int $userId): ?int
+    {
+        if (!$userId) {
+            return null;
+        }
+
+        // Get required skills for this project
+        $stmt = $this->db->prepare("SELECT skill_id FROM project_skills WHERE project_id = ? AND importance = 'required'");
+        $stmt->execute([$projectId]);
+        $requiredSkills = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($requiredSkills)) {
+            return null;
+        }
+
+        // Get user's skills
+        $stmt = $this->db->prepare("SELECT skill_id FROM user_skills WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $userSkills = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (empty($userSkills)) {
+            return 0;
+        }
+
+        // Calculate matching skills
+        $matchingSkills = array_intersect($requiredSkills, $userSkills);
+        $score = (int)round((count($matchingSkills) / count($requiredSkills)) * 100);
+
+        return $score;
     }
 }
