@@ -1,26 +1,30 @@
 import api from './api';
-import type { Notification, ApiResponse, PaginatedResponse } from '../types';
+
+export interface Notification {
+  id: number;
+  type: 'application_received' | 'application_accepted' | 'application_rejected' | string;
+  message: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
 
 export const notificationsService = {
-  getNotifications: async (page = 1): Promise<PaginatedResponse<Notification>> => {
-    const response = await api.get<PaginatedResponse<Notification>>('/api/notifications', {
-      params: { page },
-    });
+  getNotifications: async (): Promise<Notification[]> => {
+    const response = await api.get<Notification[]>('/api/notifications');
     return response.data;
   },
 
-  getUnreadCount: async (): Promise<ApiResponse<{ count: number }>> => {
-    const response = await api.get<ApiResponse<{ count: number }>>('/api/notifications/unread-count');
-    return response.data;
+  getUnreadCount: async (): Promise<number> => {
+    const response = await api.get<{ count: number }>('/api/notifications/unread-count');
+    return response.data.count;
   },
 
-  markAsRead: async (id: number): Promise<ApiResponse<Notification>> => {
-    const response = await api.put<ApiResponse<Notification>>(`/api/notifications/${id}/read`);
-    return response.data;
+  markRead: async (id: number): Promise<void> => {
+    await api.put(`/api/notifications/${id}/read`);
   },
 
-  markAllAsRead: async (): Promise<ApiResponse<null>> => {
-    const response = await api.put<ApiResponse<null>>('/api/notifications/read-all');
-    return response.data;
+  markAllRead: async (): Promise<void> => {
+    await api.put('/api/notifications/read-all');
   },
 };

@@ -52,6 +52,18 @@ class ApplicationController
             $stmt = $this->db->prepare("INSERT INTO applications (project_id, applicant_id, message, status) VALUES (?, ?, ?, 'pending')");
             $stmt->execute([$projectId, $userId, $message]);
 
+            // Notify the project owner that someone applied
+            $applicantStmt = $this->db->prepare("SELECT name FROM users WHERE id = ?");
+            $applicantStmt->execute([$userId]);
+            $applicantName = $applicantStmt->fetchColumn();
+
+            $ownerNotifMsg = $applicantName . " applied to join your project \"" . $project['title'] . "\".";
+            $ownerNotifStmt = $this->db->prepare("
+                INSERT INTO notifications (user_id, type, message, link, is_read)
+                VALUES (?, 'application_received', ?, ?, 0)
+            ");
+            $ownerNotifStmt->execute([$project['owner_id'], $ownerNotifMsg, '/projects/' . $project['slug']]);
+
             $response->getBody()->write(json_encode(['message' => 'Application submitted successfully']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
         } catch (\PDOException $e) {
@@ -173,14 +185,15 @@ class ApplicationController
                 Project::updateStatusIfFull($app['project_id']);
             }
 
-            // Create notification for applicant
+            // Create notification for applicant about decision
+            $notifType = $status === 'accepted' ? 'application_accepted' : 'application_rejected';
             $notificationMsg = "Your application for the project \"" . $app['project_title'] . "\" has been " . $status . ".";
             $notifStmt = $this->db->prepare("
                 INSERT INTO notifications (user_id, type, message, link, is_read) 
-                VALUES (?, 'application', ?, ?, 0)
+                VALUES (?, ?, ?, ?, 0)
             ");
             $notifLink = '/projects/' . $app['project_slug'];
-            $notifStmt->execute([$app['applicant_id'], $notificationMsg, $notifLink]);
+            $notifStmt->execute([$app['applicant_id'], $notifType, $notificationMsg, $notifLink]);
 
             $this->db->commit();
 

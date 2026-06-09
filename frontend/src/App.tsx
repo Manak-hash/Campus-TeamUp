@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import GuestRoute from './components/GuestRoute'
@@ -35,7 +36,8 @@ function App() {
     <ErrorBoundary>
       <ToastProvider>
         <AuthProvider>
-          <Router>
+          <NotificationProvider>
+            <Router>
             <div className="min-h-screen bg-gray-50">
               <ToastContainer />
               <Routes>
@@ -153,6 +155,7 @@ function App() {
               </Routes>
             </div>
           </Router>
+          </NotificationProvider>
         </AuthProvider>
       </ToastProvider>
     </ErrorBoundary>
