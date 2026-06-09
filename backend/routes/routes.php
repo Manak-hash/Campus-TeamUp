@@ -7,6 +7,7 @@ use CampusTeamUp\Controllers\UserController;
 use CampusTeamUp\Controllers\ProjectController;
 use CampusTeamUp\Controllers\ApplicationController;
 use CampusTeamUp\Controllers\NotificationController;
+use CampusTeamUp\Controllers\AdminController;
 
 return function (App $app) {
     // API routes
@@ -53,6 +54,14 @@ return function (App $app) {
         $group->get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/notifications/read-all', [NotificationController::class, 'markAllRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/notifications/{id}/read', [NotificationController::class, 'markRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+
+        // Admin routes (admin-only) — all protected by AdminMiddleware
+        $group->get('/admin/users', [AdminController::class, 'getUsers'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        $group->put('/admin/users/{id}/role', [AdminController::class, 'updateUserRole'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        $group->delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        $group->get('/admin/projects', [AdminController::class, 'getProjects'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        $group->delete('/admin/projects/{id}', [AdminController::class, 'deleteProject'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        $group->get('/admin/stats', [AdminController::class, 'getStats'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
     });
 
     // Health check endpoint
