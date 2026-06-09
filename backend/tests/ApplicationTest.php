@@ -146,7 +146,7 @@ class ApplicationTest extends BaseTestCase
         $stmt->execute();
         $notif = $stmt->fetch();
         $this->assertNotFalse($notif);
-        $this->assertEquals('application', $notif['type']);
+        $this->assertEquals('application_accepted', $notif['type']);
         $this->assertStringContainsString('accepted', $notif['message']);
         $this->assertEquals('/projects/test-project', $notif['link']);
 

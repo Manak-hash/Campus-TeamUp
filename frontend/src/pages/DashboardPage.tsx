@@ -251,7 +251,19 @@ const DashboardPage: React.FC = () => {
                   >
                     {app.project_title}
                   </Link>
-                  <StatusBadge status={app.status} size="sm" />
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border capitalize tracking-wide ${
+                      app.status === 'pending'
+                        ? 'bg-yellow-50 text-yellow-850 border-yellow-200'
+                        : app.status === 'accepted'
+                        ? 'bg-green-50 text-green-850 border-green-200'
+                        : app.status === 'rejected'
+                        ? 'bg-red-50 text-red-850 border-red-200'
+                        : 'bg-gray-50 text-gray-600 border-gray-200'
+                    }`}
+                  >
+                    {app.status}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-500">
                   Applied {new Date(app.created_at).toLocaleDateString()}

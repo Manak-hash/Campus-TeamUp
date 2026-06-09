@@ -55,13 +55,15 @@ return function (App $app) {
         $group->put('/notifications/read-all', [NotificationController::class, 'markAllRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/notifications/{id}/read', [NotificationController::class, 'markRead'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
 
-        // Admin routes (admin-only) — all protected by AdminMiddleware
-        $group->get('/admin/users', [AdminController::class, 'getUsers'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
-        $group->put('/admin/users/{id}/role', [AdminController::class, 'updateUserRole'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
-        $group->delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
-        $group->get('/admin/projects', [AdminController::class, 'getProjects'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
-        $group->delete('/admin/projects/{id}', [AdminController::class, 'deleteProject'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
-        $group->get('/admin/stats', [AdminController::class, 'getStats'])->add(new \CampusTeamUp\Middleware\AdminMiddleware());
+        // Admin routes
+        $group->group('/admin', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->get('/stats', [\CampusTeamUp\Controllers\AdminController::class, 'getStats']);
+            $adminGroup->get('/users', [\CampusTeamUp\Controllers\AdminController::class, 'getUsers']);
+            $adminGroup->delete('/users/{id}', [\CampusTeamUp\Controllers\AdminController::class, 'deleteUser']);
+            $adminGroup->put('/users/{id}/role', [\CampusTeamUp\Controllers\AdminController::class, 'updateUserRole']);
+            $adminGroup->get('/projects', [\CampusTeamUp\Controllers\AdminController::class, 'getProjects']);
+            $adminGroup->delete('/projects/{id}', [\CampusTeamUp\Controllers\AdminController::class, 'deleteProject']);
+        })->add(new \CampusTeamUp\Middleware\AdminMiddleware())->add(new \CampusTeamUp\Middleware\AuthMiddleware());
     });
 
     // Health check endpoint

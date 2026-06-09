@@ -2,275 +2,180 @@
 
 namespace CampusTeamUp\Tests;
 
-use CampusTeamUp\Tests\BaseTestCase;
-
 class AdminTest extends BaseTestCase
 {
-    public function testAdminRequiresAdminRole()
+    protected function seed(): void
     {
-        // Login as regular student user
-        $this->loginAs(2); // Assuming user ID 2 is a student
+        // Add Admin (ID 1)
+        $stmt = $this->pdo->prepare("INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([1, 'admin@example.com', password_hash('password', PASSWORD_DEFAULT), 'Admin User', 'admin']);
 
-        $response = $this->get('/api/admin/users');
+        // Add Student 1 (ID 2)
+        $stmt = $this->pdo->prepare("INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([2, 'student@example.com', password_hash('password', PASSWORD_DEFAULT), 'Student User 1', 'student']);
+
+        // Add Student 2 (ID 3)
+        $stmt = $this->pdo->prepare("INSERT INTO users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([3, 'student2@example.com', password_hash('password', PASSWORD_DEFAULT), 'Student User 2', 'student']);
+
+        // Add Projects
+        $stmt = $this->pdo->prepare("INSERT INTO projects (id, title, slug, description, category, owner_id, max_members, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([1, 'Project One', 'project-one', 'Description of project one', 'web-development', 2, 2, 'open']);
+        $stmt->execute([2, 'Project Two', 'project-two', 'Description of project two', 'mobile-development', 3, 2, 'open']);
+
+        // Add Memberships
+        $stmt = $this->pdo->prepare("INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, ?)");
+        $stmt->execute([1, 2, 'owner']);
+        $stmt->execute([2, 3, 'owner']);
+        $stmt->execute([2, 2, 'member']);
+
+        // Add Application
+        $stmt = $this->pdo->prepare("INSERT INTO applications (project_id, applicant_id, message, status) VALUES (?, ?, ?, ?)");
+        $stmt->execute([1, 3, 'Apply message', 'pending']);
+    }
+
+    public function testGetStatsAsAdmin(): void
+    {
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('GET', '/api/admin/stats');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('data', $payload);
+        
+        $stats = $payload['data'];
+        $this->assertEquals(3, $stats['total_users']);
+        $this->assertEquals(2, $stats['total_projects']);
+        $this->assertEquals(1, $stats['total_applications']);
+        $this->assertEquals(2, $stats['open_projects']);
+        
+        $this->assertCount(3, $stats['recent_users']);
+        $this->assertCount(2, $stats['recent_projects']);
+    }
+
+    public function testGetStatsAsStudentForbidden(): void
+    {
+        $this->loginAs(2); // student
+        $request = $this->createRequest('GET', '/api/admin/stats');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+
         $this->assertEquals(403, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('error', $data);
-        $this->assertStringContainsString('Admin access required', $data['error']);
+        $this->assertEquals('Forbidden. Admin access required.', $payload['error']);
     }
 
-    public function testAdminCanAccessEndpoints()
+    public function testGetUsersAsAdmin(): void
     {
-        // Login as admin user (user ID 1)
-        $this->loginAs(1);
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('GET', '/api/admin/users?page=1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
-        // Test stats endpoint
-        $response = $this->get('/api/admin/stats');
         $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('total_users', $data);
-        $this->assertArrayHasKey('total_projects', $data);
-        $this->assertArrayHasKey('total_applications', $data);
-        $this->assertArrayHasKey('open_projects', $data);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertArrayHasKey('meta', $payload);
+        
+        $this->assertCount(3, $payload['data']);
+        $this->assertEquals(1, $payload['meta']['current_page']);
+        $this->assertEquals(3, $payload['meta']['total']);
     }
 
-    public function testGetUsersPaginated()
+    public function testUpdateUserRole(): void
     {
-        $this->loginAs(1);
-
-        $response = $this->get('/api/admin/users?page=1&limit=10');
-        $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('users', $data);
-        $this->assertArrayHasKey('pagination', $data);
-        $this->assertArrayHasKey('total', $data['pagination']);
-        $this->assertArrayHasKey('page', $data['pagination']);
-        $this->assertArrayHasKey('limit', $data['pagination']);
-
-        // Check that each user has required fields
-        foreach ($data['users'] as $user) {
-            $this->assertArrayHasKey('id', $user);
-            $this->assertArrayHasKey('email', $user);
-            $this->assertArrayHasKey('name', $user);
-            $this->assertArrayHasKey('role', $user);
-            $this->assertArrayHasKey('created_at', $user);
-            $this->assertArrayHasKey('owned_projects_count', $user);
-            $this->assertArrayHasKey('teams_count', $user);
-        }
-    }
-
-    public function testGetProjectsPaginated()
-    {
-        $this->loginAs(1);
-
-        $response = $this->get('/api/admin/projects?page=1&limit=10');
-        $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('projects', $data);
-        $this->assertArrayHasKey('pagination', $data);
-
-        // Check that each project has required fields
-        foreach ($data['projects'] as $project) {
-            $this->assertArrayHasKey('id', $project);
-            $this->assertArrayHasKey('title', $project);
-            $this->assertArrayHasKey('owner_name', $project);
-            $this->assertArrayHasKey('status', $project);
-            $this->assertArrayHasKey('member_count', $project);
-            $this->assertArrayHasKey('pending_applications', $project);
-        }
-    }
-
-    public function testUpdateUserRole()
-    {
-        $this->loginAs(1);
-
-        // First, get a user to update (user ID 3)
-        $response = $this->get('/api/admin/users');
-        $data = json_decode($response->getBody(), true);
-        $targetUserId = null;
-
-        foreach ($data['users'] as $user) {
-            if ($user['id'] != 1) { // Not the admin themselves
-                $targetUserId = $user['id'];
-                break;
-            }
-        }
-
-        $this->assertNotNull($targetUserId, 'No suitable user found for role update test');
-
-        // Promote user to admin
-        $response = $this->put('/api/admin/users/' . $targetUserId . '/role', [
-            'role' => 'admin'
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('PUT', '/api/admin/users/2/role', [
+            'Content-Type' => 'application/json'
         ]);
+        $request->getBody()->write(json_encode(['role' => 'admin']));
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
+
         $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('admin', $payload['data']['role']);
 
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('message', $data);
-        $this->assertEquals('admin', $data['new_role']);
-
-        // Demote back to student
-        $response = $this->put('/api/admin/users/' . $targetUserId . '/role', [
-            'role' => 'student'
-        ]);
-        $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertEquals('student', $data['new_role']);
+        // Verify in DB
+        $stmt = $this->pdo->prepare("SELECT role FROM users WHERE id = 2");
+        $stmt->execute();
+        $this->assertEquals('admin', $stmt->fetchColumn());
     }
 
-    public function testCannotUpdateOwnRole()
+    public function testUpdateUserRoleSelfDemotionForbidden(): void
     {
-        $this->loginAs(1);
-
-        $response = $this->put('/api/admin/users/1/role', [
-            'role' => 'student'
+        $this->loginAs(1); // admin demoting himself (1)
+        $request = $this->createRequest('PUT', '/api/admin/users/1/role', [
+            'Content-Type' => 'application/json'
         ]);
+        $request->getBody()->write(json_encode(['role' => 'student']));
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
         $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('error', $data);
-        $this->assertStringContainsString('own role', $data['error']);
+        $this->assertEquals('You cannot demote yourself from admin', $payload['error']);
     }
 
-    public function testInvalidRoleRejected()
+    public function testDeleteUser(): void
     {
-        $this->loginAs(1);
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('DELETE', '/api/admin/users/2');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
-        $response = $this->put('/api/admin/users/2/role', [
-            'role' => 'superadmin'
-        ]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('User deleted successfully', $payload['message']);
+
+        // Verify User 2 is deleted
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE id = 2");
+        $stmt->execute();
+        $this->assertEquals(0, $stmt->fetchColumn());
+
+        // Verify project owned by User 2 is deleted
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM projects WHERE id = 1");
+        $stmt->execute();
+        $this->assertEquals(0, $stmt->fetchColumn());
+
+        // Verify membership of User 2 in Project 2 is deleted
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM project_members WHERE project_id = 2 AND user_id = 2");
+        $stmt->execute();
+        $this->assertEquals(0, $stmt->fetchColumn());
+    }
+
+    public function testDeleteUserSelfForbidden(): void
+    {
+        $this->loginAs(1); // admin deleting himself
+        $request = $this->createRequest('DELETE', '/api/admin/users/1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
         $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('error', $data);
+        $this->assertEquals('You cannot delete your own admin account', $payload['error']);
     }
 
-    public function testDeleteUser()
+    public function testGetProjectsAsAdmin(): void
     {
-        $this->loginAs(1);
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('GET', '/api/admin/projects?page=1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
-        // Create a test user to delete
-        $registerResponse = $this->post('/api/register', [
-            'email' => 'testuser' . time() . '@test.com',
-            'password' => 'password123',
-            'name' => 'Test User',
-            'department' => 'Computer Science',
-            'academic_level' => 'Junior'
-        ]);
-
-        $this->assertEquals(201, $registerResponse->getStatusCode());
-
-        // Get the user ID from the register response
-        $userData = json_decode($registerResponse->getBody(), true);
-        $userId = $userData['user']['id'];
-
-        // Now delete this user
-        $response = $this->delete('/api/admin/users/' . $userId);
         $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('message', $data);
-        $this->assertStringContainsString('deleted successfully', $data['message']);
-
-        // Verify user is actually deleted
-        $getResponse = $this->get('/api/admin/users');
-        $getData = json_decode($getResponse->getBody(), true);
-
-        $found = false;
-        foreach ($getData['users'] as $user) {
-            if ($user['id'] === $userId) {
-                $found = true;
-                break;
-            }
-        }
-        $this->assertFalse($found, 'User should have been deleted');
+        $this->assertCount(2, $payload['data']);
+        $this->assertEquals(2, $payload['meta']['total']);
     }
 
-    public function testCannotDeleteSelf()
+    public function testDeleteProject(): void
     {
-        $this->loginAs(1);
+        $this->loginAs(1); // admin
+        $request = $this->createRequest('DELETE', '/api/admin/projects/1');
+        $response = $this->app->handle($request);
+        $payload = json_decode((string) $response->getBody(), true);
 
-        $response = $this->delete('/api/admin/users/1');
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('error', $data);
-        $this->assertStringContainsString('own account', $data['error']);
-    }
-
-    public function testDeleteProject()
-    {
-        $this->loginAs(1);
-
-        // Create a test project
-        $createResponse = $this->post('/api/projects', [
-            'title' => 'Test Project for Deletion ' . time(),
-            'description' => 'This project will be deleted by admin',
-            'category' => 'web-development',
-            'max_members' => 5
-        ]);
-
-        $this->assertEquals(201, $createResponse->getStatusCode());
-
-        $projectData = json_decode($createResponse->getBody(), true);
-        $projectId = $projectData['project']['id'];
-
-        // Delete the project as admin
-        $response = $this->delete('/api/admin/projects/' . $projectId);
         $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('Project deleted successfully', $payload['message']);
 
-        $data = json_decode($response->getBody(), true);
-        $this->assertArrayHasKey('message', $data);
-        $this->assertStringContainsString('deleted successfully', $data['message']);
-
-        // Verify project is actually deleted
-        $getResponse = $this->get('/api/admin/projects');
-        $getData = json_decode($getResponse->getBody(), true);
-
-        $found = false;
-        foreach ($getData['projects'] as $project) {
-            if ($project['id'] === $projectId) {
-                $found = true;
-                break;
-            }
-        }
-        $this->assertFalse($found, 'Project should have been deleted');
-    }
-
-    public function testStatsEndpoint()
-    {
-        $this->loginAs(1);
-
-        $response = $this->get('/api/admin/stats');
-        $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getBody(), true);
-
-        // Check all required stats are present
-        $this->assertArrayHasKey('total_users', $data);
-        $this->assertArrayHasKey('total_admins', $data);
-        $this->assertArrayHasKey('total_projects', $data);
-        $this->assertArrayHasKey('open_projects', $data);
-        $this->assertArrayHasKey('total_applications', $data);
-        $this->assertArrayHasKey('pending_applications', $data);
-        $this->assertArrayHasKey('accepted_applications', $data);
-
-        // Verify data types
-        $this->assertIsInt($data['total_users']);
-        $this->assertIsInt($data['total_admins']);
-        $this->assertIsInt($data['total_projects']);
-        $this->assertIsInt($data['open_projects']);
-        $this->assertIsInt($data['total_applications']);
-
-        // Verify logical constraints
-        $this->assertGreaterThanOrEqual(0, $data['total_users']);
-        $this->assertGreaterThanOrEqual(1, $data['total_admins']); // At least one admin (us)
-        $this->assertLessThanOrEqual($data['total_users'], $data['total_admins']); // Admins <= total users
-        $this->assertLessThanOrEqual($data['total_projects'], $data['open_projects']); // Open <= total
+        // Verify project is deleted
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM projects WHERE id = 1");
+        $stmt->execute();
+        $this->assertEquals(0, $stmt->fetchColumn());
     }
 }

@@ -9,6 +9,7 @@ interface ButtonProps {
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
   className?: string;
+  title?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -20,6 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
   onClick,
   type = 'button',
   className = '',
+  title,
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
@@ -44,6 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
       className={classes}
       onClick={onClick}
       disabled={disabled || loading}
+      title={title}
     >
       {loading && (
         <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

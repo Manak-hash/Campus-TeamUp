@@ -47,6 +47,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { path: '/projects/new', label: 'Create Project' },
     { path: '/applications', label: 'Applications' },
     { path: '/bookmarks', label: 'Bookmarks' },
+    ...(user?.role === 'admin' ? [{ path: '/admin', label: 'Admin' }] : []),
   ];
 
   return (

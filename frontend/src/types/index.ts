@@ -63,6 +63,8 @@ export interface Project {
   member_count?: number;
   owner_name?: string;
   owner_avatar?: string | null;
+  pending_applicant_count?: number;
+  user_role?: string;
 }
 
 /** Payload sent when creating or updating a project */
@@ -90,6 +92,9 @@ export interface Application {
   status: ApplicationStatus;
   created_at: string;
   updated_at: string;
+  project_slug?: string;
+  project_title?: string;
+  project_status?: ProjectStatus;
 }
 
 // ── Notifications ────────────────────────────
@@ -138,6 +143,7 @@ export interface AdminStats {
   total_users: number;
   total_projects: number;
   total_applications: number;
+  open_projects: number;
   recent_users: User[];
   recent_projects: Project[];
 }
