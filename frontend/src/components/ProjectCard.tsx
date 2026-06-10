@@ -4,12 +4,16 @@ import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
 import { Avatar } from './Avatar';
 import { Button } from './Button';
+import { useAuth } from '../hooks/useAuth';
+import { bookmarksService } from '../services/bookmarks.service';
+import { useToast } from '../context/ToastContext';
 
 import type { Project, ProjectSkill } from '../types';
 export type { Project, ProjectSkill };
 
 interface ProjectCardProps {
   project: Project;
+  onBookmarkToggle?: (projectId: number, isBookmarked: boolean) => void;
 }
 
 const getCategoryLabel = (cat: string) => {
@@ -23,7 +27,50 @@ const getCategoryLabel = (cat: string) => {
   }
 };
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onBookmarkToggle }) => {
+  const { user } = useAuth();
+  const { showSuccess, showError } = useToast();
+  const [isSaved, setIsSaved] = React.useState(project.is_bookmarked ?? false);
+  const [isMutating, setIsMutating] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsSaved(project.is_bookmarked ?? false);
+  }, [project.is_bookmarked]);
+
+  const handleBookmarkClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      showError('Please log in to save projects.');
+      return;
+    }
+
+    if (isMutating) return;
+
+    const previousSaved = isSaved;
+    setIsSaved(!previousSaved);
+    setIsMutating(true);
+
+    try {
+      if (previousSaved) {
+        await bookmarksService.removeBookmark(project.id);
+        showSuccess('Project removed from bookmarks');
+      } else {
+        await bookmarksService.addBookmark(project.id);
+        showSuccess('Project saved to bookmarks');
+      }
+      if (onBookmarkToggle) {
+        onBookmarkToggle(project.id, !previousSaved);
+      }
+    } catch (err: any) {
+      setIsSaved(previousSaved);
+      showError(err.response?.data?.error || 'Failed to update bookmark');
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   return (
     <Card
       className="h-full flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
@@ -45,6 +92,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               </span>
             )}
             <StatusBadge status={project.status} />
+            <button
+              onClick={handleBookmarkClick}
+              disabled={isMutating}
+              className={`p-1 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                isSaved
+                  ? 'text-primary-600 hover:text-primary-700'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+              title={isSaved ? 'Unsave Project' : 'Save Project'}
+            >
+              <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
           </div>
         </div>
       }

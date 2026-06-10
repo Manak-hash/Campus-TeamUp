@@ -7,22 +7,13 @@ export const bookmarksService = {
     return response.data;
   },
 
-  addBookmark: async (projectId: number): Promise<ApiResponse<Bookmark>> => {
-    const response = await api.post<ApiResponse<Bookmark>>('/api/bookmarks', {
-      project_id: projectId,
-    });
+  addBookmark: async (projectId: number): Promise<ApiResponse<{ message: string }>> => {
+    const response = await api.post<ApiResponse<{ message: string }>>(`/api/projects/${projectId}/bookmark`);
     return response.data;
   },
 
-  removeBookmark: async (bookmarkId: number): Promise<ApiResponse<null>> => {
-    const response = await api.delete<ApiResponse<null>>(`/api/bookmarks/${bookmarkId}`);
-    return response.data;
-  },
-
-  isBookmarked: async (projectId: number): Promise<ApiResponse<{ bookmarked: boolean; bookmark_id?: number }>> => {
-    const response = await api.get<ApiResponse<{ bookmarked: boolean; bookmark_id?: number }>>(
-      `/api/bookmarks/check/${projectId}`,
-    );
+  removeBookmark: async (projectId: number): Promise<ApiResponse<{ message: string }>> => {
+    const response = await api.delete<ApiResponse<{ message: string }>>(`/api/projects/${projectId}/bookmark`);
     return response.data;
   },
 };

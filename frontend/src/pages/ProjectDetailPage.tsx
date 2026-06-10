@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { projectsService } from '../services/projects.service';
 import { profileService } from '../services/profile.service';
+import { bookmarksService } from '../services/bookmarks.service';
 import StatusBadge from '../components/StatusBadge';
 import Avatar from '../components/Avatar';
 import Button from '../components/Button';
@@ -36,6 +37,7 @@ interface Project {
   }[];
   user_application_status: 'pending' | 'accepted' | 'rejected' | 'cancelled' | null;
   skill_match_score?: number | null;
+  is_bookmarked?: boolean;
 }
 
 const ProjectDetailPage: React.FC = () => {
@@ -49,6 +51,43 @@ const ProjectDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isMutating, setIsMutating] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      setIsSaved(project.is_bookmarked ?? false);
+    }
+  }, [project]);
+
+  const handleBookmarkToggle = async () => {
+    if (!project) return;
+    if (!user) {
+      showError('Please log in to save projects.');
+      return;
+    }
+
+    if (isMutating) return;
+
+    const previousSaved = isSaved;
+    setIsSaved(!previousSaved);
+    setIsMutating(true);
+
+    try {
+      if (previousSaved) {
+        await bookmarksService.removeBookmark(project.id);
+        showSuccess('Project removed from bookmarks');
+      } else {
+        await bookmarksService.addBookmark(project.id);
+        showSuccess('Project saved to bookmarks');
+      }
+    } catch (err: any) {
+      setIsSaved(previousSaved);
+      showError(err.response?.data?.error || 'Failed to update bookmark');
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
   const fetchProjectDetails = async () => {
     if (!slug) return;
@@ -239,25 +278,42 @@ const ProjectDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Owner Actions */}
-          {isOwner && (
-            <div className="flex items-center space-x-2 shrink-0">
-              <Link to={`/projects/${project.slug}/edit`}>
-                <Button variant="secondary" size="sm" className="flex items-center">
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2 shrink-0">
+            <button
+              onClick={handleBookmarkToggle}
+              disabled={isMutating}
+              className={`inline-flex items-center justify-center p-2 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
+                isSaved
+                  ? 'bg-primary-50 text-primary-600 border-primary-200 shadow-sm'
+                  : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+              title={isSaved ? 'Unsave Project' : 'Save Project'}
+            >
+              <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+
+            {isOwner && (
+              <>
+                <Link to={`/projects/${project.slug}/edit`}>
+                  <Button variant="secondary" size="sm" className="flex items-center">
+                    <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit Project
+                  </Button>
+                </Link>
+                <Button variant="danger" size="sm" onClick={handleDelete} className="flex items-center">
                   <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  Edit Project
+                  Delete
                 </Button>
-              </Link>
-              <Button variant="danger" size="sm" onClick={handleDelete} className="flex items-center">
-                <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Delete
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ use CampusTeamUp\Controllers\ProjectController;
 use CampusTeamUp\Controllers\ApplicationController;
 use CampusTeamUp\Controllers\NotificationController;
 use CampusTeamUp\Controllers\AdminController;
+use CampusTeamUp\Controllers\BookmarkController;
 
 return function (App $app) {
     // API routes
@@ -41,6 +42,11 @@ return function (App $app) {
         $group->post('/projects', [ProjectController::class, 'create'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->put('/projects/{id}', [ProjectController::class, 'update'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
         $group->delete('/projects/{id}', [ProjectController::class, 'delete'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+
+        // Bookmark routes
+        $group->post('/projects/{id}/bookmark', [BookmarkController::class, 'bookmark'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->delete('/projects/{id}/bookmark', [BookmarkController::class, 'unbookmark'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
+        $group->get('/bookmarks', [BookmarkController::class, 'index'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());
 
         // Application routes
         $group->post('/projects/{id}/apply', [ApplicationController::class, 'apply'])->add(new \CampusTeamUp\Middleware\AuthMiddleware());

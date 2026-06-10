@@ -69,6 +69,13 @@ class ProjectController
         $projects = $stmt->fetchAll();
 
         $currentUserId = $_SESSION['user_id'] ?? null;
+        $bookmarkedProjectIds = [];
+        if ($currentUserId) {
+            $bookmarkStmt = $this->db->prepare("SELECT project_id FROM bookmarks WHERE user_id = ?");
+            $bookmarkStmt->execute([$currentUserId]);
+            $bookmarkedProjectIds = array_map('intval', $bookmarkStmt->fetchAll(PDO::FETCH_COLUMN));
+        }
+
         foreach ($projects as &$project) {
             $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
@@ -81,6 +88,7 @@ class ProjectController
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
             $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $currentUserId);
+            $project['is_bookmarked'] = in_array($projectId, $bookmarkedProjectIds, true);
         }
 
         $response->getBody()->write(json_encode([
@@ -111,6 +119,11 @@ class ProjectController
         $stmt->execute([$userId]);
         $projects = $stmt->fetchAll();
 
+        $bookmarkedProjectIds = [];
+        $bookmarkStmt = $this->db->prepare("SELECT project_id FROM bookmarks WHERE user_id = ?");
+        $bookmarkStmt->execute([$userId]);
+        $bookmarkedProjectIds = array_map('intval', $bookmarkStmt->fetchAll(PDO::FETCH_COLUMN));
+
         foreach ($projects as &$project) {
             $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
@@ -123,6 +136,7 @@ class ProjectController
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
             $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $userId);
+            $project['is_bookmarked'] = in_array($projectId, $bookmarkedProjectIds, true);
         }
 
         $response->getBody()->write(json_encode(['projects' => $projects]));
@@ -146,6 +160,11 @@ class ProjectController
         $stmt->execute([$userId]);
         $projects = $stmt->fetchAll();
 
+        $bookmarkedProjectIds = [];
+        $bookmarkStmt = $this->db->prepare("SELECT project_id FROM bookmarks WHERE user_id = ?");
+        $bookmarkStmt->execute([$userId]);
+        $bookmarkedProjectIds = array_map('intval', $bookmarkStmt->fetchAll(PDO::FETCH_COLUMN));
+
         foreach ($projects as &$project) {
             $projectId = (int)$project['id'];
             $skillStmt = $this->db->prepare("
@@ -158,6 +177,7 @@ class ProjectController
             $project['skills'] = $skillStmt->fetchAll();
             $project['owner_avatar'] = $this->formatAvatarUrl($request, $project['owner_avatar'] ?? null);
             $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $userId);
+            $project['is_bookmarked'] = in_array($projectId, $bookmarkedProjectIds, true);
         }
 
         $response->getBody()->write(json_encode(['projects' => $projects]));
@@ -235,6 +255,14 @@ class ProjectController
 
         // Calculate skill match score
         $project['skill_match_score'] = $this->calculateSkillMatchScore($projectId, $currentUserId);
+
+        // Check if bookmarked
+        $project['is_bookmarked'] = false;
+        if ($currentUserId) {
+            $bookmarkStmt = $this->db->prepare("SELECT COUNT(*) FROM bookmarks WHERE project_id = ? AND user_id = ?");
+            $bookmarkStmt->execute([$projectId, $currentUserId]);
+            $project['is_bookmarked'] = (int)$bookmarkStmt->fetchColumn() > 0;
+        }
 
         $response->getBody()->write(json_encode($project));
         return $response->withHeader('Content-Type', 'application/json');

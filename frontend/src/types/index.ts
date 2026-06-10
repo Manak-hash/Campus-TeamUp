@@ -66,6 +66,7 @@ export interface Project {
   pending_applicant_count?: number;
   user_role?: string;
   skill_match_score?: number | null;
+  is_bookmarked?: boolean;
 }
 
 /** Payload sent when creating or updating a project */
