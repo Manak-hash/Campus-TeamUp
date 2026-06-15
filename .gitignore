@@ -36,13 +36,9 @@ yarn-debug.log*
 yarn-error.log*
 .phpunit.result.cache
 
-# AI / Agent Metadata
-GEMINI.md
-**/GEMINI.md
-MEMORY.md
-.gemini/
-.vibeyardignore
-
 # PHP Tools
 composer.phar
 phpunit.xml
+
+# Infinity free
+backend/.htaccess.infinityfree

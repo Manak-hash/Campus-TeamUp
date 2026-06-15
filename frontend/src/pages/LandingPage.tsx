@@ -67,9 +67,6 @@ export const LandingPage: React.FC = () => {
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary-100/30 rounded-full blur-3xl" />
           
           <div className="max-w-7xl mx-auto px-4 relative z-10 text-center space-y-6 md:space-y-8">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-800 tracking-wide uppercase">
-              🚀 Empowering Student Collaborations
-            </span>
             
             <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight max-w-4xl mx-auto">
               Build Amazing Projects with <span className="text-primary-600">Your Campus Peer Teams</span>
@@ -247,7 +244,7 @@ export const LandingPage: React.FC = () => {
               Check out our code repositories and contribute to the development of the platform.
             </p>
             <a
-              href="https://github.com"
+              href="https://github.com/Manak-hash/Campus-TeamUp"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center text-sm font-bold text-primary-400 hover:text-primary-300 transition-colors"

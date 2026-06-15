@@ -1,5 +1,6 @@
 <?php
 
+// Simple session for development
 session_start();
 
 use Slim\Factory\AppFactory;

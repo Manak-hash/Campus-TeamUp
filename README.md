@@ -69,7 +69,45 @@ Campus-TeamUp/
 
 ## Demo
 
-**Screenshots and demo GIF will be added in Phase 5: Ship & Refine**
+### Platform Overview
+
+![Landing Page](screenshots/landing-page.png)
+
+The platform homepage where students can discover projects and learn about team formation opportunities.
+
+### Core Features
+
+**🔍 Discover Projects**
+
+![Explore Projects](screenshots/explore-projects.png)
+
+Browse and filter projects by category, required skills, and status. Each project card shows skill match percentages based on your profile.
+
+**📋 Project Details**
+
+![Project Detail Page](screenshots/project-detail.png)
+
+View comprehensive project information including required skills, team composition, and application status.
+
+**👤 User Dashboard**
+
+![User Dashboard](screenshots/user-dashboard.png)
+
+Manage your owned projects, team memberships, applications, and saved projects all in one place.
+
+### Admin Panel
+
+**📊 Platform Management**
+
+![Admin Dashboard](screenshots/admin-dashboard.png)
+
+Administrators can monitor platform statistics, moderate users and projects, and manage platform health.
+
+### Authentication
+
+![Login Page](screenshots/login-page.png)
+
+Secure login system for students to access their accounts and manage their projects.
 
 ## Local Development Setup
 
@@ -107,10 +145,15 @@ cd ..
 
 5. Start PHP server:
 \`\`\`bash
-php -S localhost:8000 -t public
+php -S 0.0.0.0:8000 -t public
 \`\`\`
 
 Backend will run on http://localhost:8000
+
+**Network Access:** The backend server is configured to accept connections from other devices on your local network. To test from mobile/tablet:
+- Find your computer's IP address (e.g., 192.168.1.100)
+- Update frontend .env: `VITE_API_URL=http://YOUR_IP:8000`
+- Access from other devices: http://YOUR_IP:8000/api/ping
 
 ### Frontend Setup
 
@@ -135,6 +178,11 @@ npm run dev
 \`\`\`
 
 Frontend will run on http://localhost:5173
+
+**Network Access:** The dev server is configured to accept connections from other devices on your local network. To test from mobile/tablet:
+- Find your computer's IP address (e.g., 192.168.1.100)
+- Access from other devices: http://YOUR_IP:5173
+- Make sure backend is also accessible from network
 
 ## Testing
 

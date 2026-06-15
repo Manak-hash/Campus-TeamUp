@@ -348,14 +348,22 @@ class ProjectController
     {
         $userId = $request->getAttribute('user')['id'];
         $userRole = $request->getAttribute('user')['role'];
-        $projectId = (int)$args['id'];
+        $idOrSlug = $args['id'];
         $data = $request->getParsedBody();
 
-        $project = Project::findById($projectId);
+        // Find project by ID or slug
+        if (is_numeric($idOrSlug)) {
+            $project = Project::findById((int)$idOrSlug);
+        } else {
+            $project = Project::findBySlug($idOrSlug);
+        }
+
         if (!$project) {
             $response->getBody()->write(json_encode(['error' => 'Project not found']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
+
+        $projectId = (int)$project['id'];
 
         if ($project['owner_id'] != $userId && $userRole !== 'admin') {
             $response->getBody()->write(json_encode(['error' => 'Forbidden - only project owner can update']));
@@ -434,13 +442,21 @@ class ProjectController
     {
         $userId = $request->getAttribute('user')['id'];
         $userRole = $request->getAttribute('user')['role'];
-        $projectId = (int)$args['id'];
+        $idOrSlug = $args['id'];
 
-        $project = Project::findById($projectId);
+        // Find project by ID or slug
+        if (is_numeric($idOrSlug)) {
+            $project = Project::findById((int)$idOrSlug);
+        } else {
+            $project = Project::findBySlug($idOrSlug);
+        }
+
         if (!$project) {
             $response->getBody()->write(json_encode(['error' => 'Project not found']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
+
+        $projectId = (int)$project['id'];
 
         if ($project['owner_id'] != $userId && $userRole !== 'admin') {
             $response->getBody()->write(json_encode(['error' => 'Forbidden - only project owner or admin can delete']));

@@ -14,8 +14,19 @@ class CorsMiddleware
         // Get the origin from the request
         $origin = $request->getHeaderLine('Origin');
 
-        // Allow all origins in development
-        $allowedOrigin = $origin ?: '*';
+        // Get allowed origins from environment
+        $allowedOrigins = getenv('CORS_ALLOWED_ORIGINS') ?: '';
+        $allowedOriginsArray = array_map('trim', explode(',', $allowedOrigins));
+
+        // Check if origin is allowed
+        $allowedOrigin = '*';
+        if ($origin && in_array($origin, $allowedOriginsArray)) {
+            $allowedOrigin = $origin;
+        } elseif ($origin && !empty($allowedOrigins)) {
+            // Origin provided but not in whitelist - reject
+            $response = new SlimResponse();
+            return $response->withStatus(403)->withBody($response->getBody()->write('CORS origin not allowed'));
+        }
 
         // Handle OPTIONS preflight requests
         if ($request->getMethod() === 'OPTIONS') {
